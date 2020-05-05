@@ -30,10 +30,10 @@ public class HbaseDataFileCheck {
 
     public static void main(String[] args) throws IOException {
 
-        String envFlag = "dev";
-        String tableName = "coupon_reco_test";
-        String fileData = "data.txt"; // 核心数据文件，col1: userId, col2(if typeOrVal==-1):value
-        String fileValueMap = "valueMap.txt"; // value map文件，提供结果值映射
+        String envFlag      = "dev";
+        String tableName    = "coupon_reco_test";
+        String fileData     = "data.txt";           // 核心数据文件，col1: userId, col2(if typeOrVal==-1):value, col3: num(可无)
+        String fileValueMap = "valueMap.txt";       // value map文件，提供结果值映射
 
         Map<String, String> mapValue = new HashMap<String, String>();
 
@@ -55,28 +55,19 @@ public class HbaseDataFileCheck {
         String str = "";
         BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(fileData)));
         int cntTotal = 0;
-        int cntEffect = 0;
+        Map<Integer, Long> mapLineStat = new HashMap<Integer, Long>();
         while ((str = bufferedReader.readLine()) != null) {
             cntTotal++;
             String[] arr = str.split("\t");
-            if (arr.length != 2) {
-                System.out.println("real length: " + arr.length);
-                continue;
-            }
-            String key = arr[0];
-            String value = arr[1];
-            value = mapValue.getOrDefault(value, value);
-            if ((!key.isEmpty()) && (!value.isEmpty())) {
-                cntEffect++;
-            } else {
-                System.out.println("@@ key: " + key);
-                System.out.println("@@ val: " + value);
-            }
+            mapLineStat.put(arr.length, mapLineStat.getOrDefault(arr.length, 0L));
         }
-
         bufferedReader.close();
-        System.out.println("# data readed: " + cntTotal);
-        System.out.println("# data insert: " + cntEffect);
+        
+        System.out.println("data file info:");
+        System.out.println("# total line: " + cntTotal);
+        for (Map.Entry<Integer, Long> entry: mapLineStat.entrySet()) {
+            System.out.println("# sep: " + entry.getKey() + ",\t" + entry.getValue());
+        }
         System.out.println("# used time:  " + stopwatch.elapsedMillis() / 1000);
     }
 }

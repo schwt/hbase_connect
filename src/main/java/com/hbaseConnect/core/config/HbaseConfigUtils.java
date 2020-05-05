@@ -10,14 +10,17 @@ import java.util.Properties;
 public class HbaseConfigUtils {
 
     public static HbaseConfig getUserConfig(Properties properties) {
-        return new HbaseConfig(properties.getProperty("hbase.zookeeper.znode.parent"),
+        return new HbaseConfig(
+            
+            properties.getProperty("hbase.zookeeper.znode.parent"),
             properties.getProperty("hbase.zk.clientPort"), properties.getProperty("hbase.zk.quorum"),
             properties.getProperty("hbase.master"), properties.getProperty("hbase.client.operation.timeout"),
             properties.getProperty("hbase.tableName.user"), properties.getProperty("hbase.columnFamily.user"));
     }
 
     public static HbaseConfig getDeviceConfig(Properties properties) {
-        return new HbaseConfig(properties.getProperty("hbase.zookeeper.znode.parent"),
+        return new HbaseConfig(
+            properties.getProperty("hbase.zookeeper.znode.parent"),
             properties.getProperty("hbase.zk.clientPort"), properties.getProperty("hbase.zk.quorum"),
             properties.getProperty("hbase.master"), properties.getProperty("hbase.client.operation.timeout"),
             properties.getProperty("hbase.tableName.device"), properties.getProperty("hbase.columnFamily.device"));

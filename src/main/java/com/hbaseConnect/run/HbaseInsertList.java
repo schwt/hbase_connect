@@ -43,46 +43,28 @@ public class HbaseInsertList {
         return true;
     }
 
-    public static Map<String, Integer> mapInsertType = new HashMap<String, Integer>() {
-        private static final long serialVersionUID = 3199026381448886424L;
-        {
-            this.put("full", 1);
-            this.put("value", 2);
-            this.put("kind", 3);
-        }
-    };
-
     public static void main(String[] args) throws Exception {
 
-        String envFlag = "dev";
-        String tableName = "coupon_reco_test";
-        String fileData = "data.txt"; // 核心数据文件，userId '\t' value
+        String envFlag      = "dev";
+        String tableName    = "coupon_reco_test";
+        String fileData     = "data.txt"; // 核心数据文件，userId '\t' value
         String fileValueMap = "valueMap.txt"; // value map文件，提供结果值映射
-        String insertType = "full"; // "full", "value", "kind"
-        int bufferSize = 1000;
+        int bufferSize      = 1000;
 
-        String family = "data";
-        String column1 = "templateNo";
-        String column2 = "couponKind";
-        String column3 = "number";
-        String value2 = "2";
-        String value3 = "1";
+        String family     = "data";
+        String column1    = "templateNo";
+        String column2    = "couponKind";
+        String column3    = "number";
+        String couponKind = "2";
 
-        if (args.length >= 6) {
-            envFlag = args[0];
-            tableName = args[1];
-            fileData = args[2];
+        if (args.length == 5) {
+            envFlag      = args[0];
+            tableName    = args[1];
+            fileData     = args[2];
             fileValueMap = args[3];
-            insertType = args[4];
-            bufferSize = Integer.parseInt(args[5]);
+            bufferSize   = Integer.parseInt(args[4]);
         } else {
             System.out.println("Error arguments!");
-            return;
-        }
-
-        Integer type = mapInsertType.getOrDefault(insertType, 1);
-        if (type == null) {
-            System.out.println("Error argument InsertType!");
             return;
         }
 
@@ -98,29 +80,28 @@ public class HbaseInsertList {
         List<Put> puts = new ArrayList<Put>();
         int cntTotal = 0;
         int cntEffect = 0;
+        Map<Integer, Long> mapLineStat = new HashMap<Integer, Long>();
         String str = "";
         while ((str = bufferedReader.readLine()) != null) {
             cntTotal++;
             String[] arr = str.split("\t");
-            if (arr.length != 2) {
+            mapLineStat.put(arr.length, 1+mapLineStat.getOrDefault(arr.length, 0L));
+            if (arr.length < 2 || arr.length > 3) {
                 continue;
             }
-            String key = arr[0];
-            String value = arr[1];
-            value = mapValue.getOrDefault(value, value);
-            if ((!key.isEmpty()) && (!value.isEmpty())) {
+            String userId = arr[0];
+            String templateNo = arr[1];
+            String number = "1";
+            if (arr.length == 3) {
+                number = arr[2];
+            }
+            templateNo = mapValue.getOrDefault(templateNo, templateNo);
+            if ((!userId.isEmpty()) && (!templateNo.isEmpty())) {
 
-                Put put = new Put(Bytes.toBytes(key));
-                if (type == 1) { // full
-                    put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column1), Bytes.toBytes(value));
-                    put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column2), Bytes.toBytes(value2));
-                    put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column3), Bytes.toBytes(value3));
-                } else if (type == 2) { // value
-                    put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column1), Bytes.toBytes(value));
-                } else if (type == 3) { // kind
-                    put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column2), Bytes.toBytes(value2));
-                    put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column3), Bytes.toBytes(value3));
-                }
+                Put put = new Put(Bytes.toBytes(userId));
+                put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column1), Bytes.toBytes(templateNo));
+                put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column2), Bytes.toBytes(couponKind));
+                put.addColumn(Bytes.toBytes(family), Bytes.toBytes(column3), Bytes.toBytes(number));
                 puts.add(put);
 
                 if (puts.size() >= bufferSize) {
@@ -134,8 +115,11 @@ public class HbaseInsertList {
             hbase.batchAddData(tableName, puts);
             cntEffect += puts.size();
         }
-
         bufferedReader.close();
+        System.out.println("data file col nums:");
+        for (Map.Entry<Integer, Long> entry: mapLineStat.entrySet()) {
+            System.out.println("   # sep: " + entry.getKey() + ",\t" + entry.getValue());
+        }
         System.out.println("# data readed: " + cntTotal);
         System.out.println("# data insert: " + cntEffect);
         System.out.println("# used time:  " + stopwatch.elapsedMillis() / 1000);

@@ -18,30 +18,31 @@ public class HbaseQueryTest {
 
     public static void main(String[] args) throws IOException {
 
-        String prodFlag = "dev";
-        String tableName = "coupon_reco_v0";
-        String key = "";
+        String prodFlag   = "dev";
+        String tableName  = "coupon_reco_v0";
+        String key        = "2002";
         String familyName = "data";
-        String col = "";
+        String col        = "templateNo";
 
-        if (args.length >= 5) {
-            prodFlag = args[0];
-            tableName = args[1];
-            key = args[2];
+        if (args.length == 5) {
+            prodFlag   = args[0];
+            tableName  = args[1];
+            key        = args[2];
             familyName = args[3];
-            col = args[4];
+            col        = args[4];
+        } else {
+            System.out.println("Error args! (len=" + args.length + ")");
         }
 
         Properties properties = PropertiesUtil.getProperties(prodFlag);
         HbaseConfig hbaseConfig = HbaseConfigUtils.getUserConfig(properties);
-
         Hbase hbase = HbaseFactory.creatHbase(hbaseConfig);
 
         Stopwatch stopwatch = new Stopwatch().start();
 
         String value = HbaseUtils.getValue(hbase, tableName, key, familyName, col);
 
-        System.out.println("value=" + value);
+        System.out.println(col + "=" + value);
 
         System.out.println("stopwatch.elapsedMillis()=" + stopwatch.elapsedMillis() / 1000);
 
