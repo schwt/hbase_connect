@@ -82,6 +82,7 @@ public class HbaseInsertList {
         int cntEffect = 0;
         Map<Integer, Long> mapLineStat = new HashMap<Integer, Long>();
         String str = "";
+        System.out.println("Hbase writing...");
         while ((str = bufferedReader.readLine()) != null) {
             cntTotal++;
             String[] arr = str.split("\t");
@@ -108,12 +109,14 @@ public class HbaseInsertList {
                     hbase.batchAddData(tableName, puts);
                     cntEffect += puts.size();
                     puts.clear();
+                    System.out.printf("\t%d\r", cntEffect);
                 }
             }
         }
         if (puts.size() >= 0) {
             hbase.batchAddData(tableName, puts);
             cntEffect += puts.size();
+            System.out.printf("\t%d\n", cntEffect);
         }
         bufferedReader.close();
         System.out.println("data file col nums:");
